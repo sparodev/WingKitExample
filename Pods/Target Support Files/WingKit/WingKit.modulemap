@@ -1,0 +1,6 @@
+framework module WingKit {
+  umbrella header "WingKit-umbrella.h"
+
+  export *
+  module * { export * }
+}
