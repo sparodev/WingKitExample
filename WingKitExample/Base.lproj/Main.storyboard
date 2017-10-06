@@ -105,7 +105,6 @@
                             <color key="tintColor" red="0.0" green="0.68627450980000004" blue="0.81176470590000005" alpha="1" colorSpace="deviceRGB"/>
                             <connections>
                                 <action selector="startTestButtonTapped:" destination="sUO-G3-7XI" id="fe7-rZ-pex"/>
-                                <segue destination="J20-Ae-0F3" kind="presentation" id="co8-P1-1pe"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -118,7 +117,7 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="KdO-SI-GRT" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-196" y="-347"/>
+            <point key="canvasLocation" x="-12" y="-496"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="bsv-qn-kKd">

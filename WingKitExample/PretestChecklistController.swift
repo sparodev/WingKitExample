@@ -64,27 +64,36 @@ class PretestChecklistController: UITableViewController {
 
         Client.createTestSession { testSession, error in
 
-            if let error = error {
+            func handleError(_ error: Error? = nil) {
+                if let error = error {
+                    print("ERROR: \(error)")
+                }
 
                 let alert = UIAlertController(
                     title: "Create Test Session Error",
-                    message: "\(error)",
+                    message: "An error occurred while starting the test session. Please try again.",
                     preferredStyle: .alert
                 )
 
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self.present(alert, animated: true, completion: nil)
-                
+            }
+
+            if let error = error {
+                handleError(error)
                 return
             }
 
             guard let testSession = testSession else {
-
+                handleError()
                 return
             }
 
-            let sessionManager = TestSessionManager(testSession: testSession)
+            let testScreenViewController = TestScreenViewController(
+                manager: TestSessionManager(testSession: testSession)
+            )
 
+            self.show(testScreenViewController, sender: nil)
         }
     }
 
