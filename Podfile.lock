@@ -1,11 +1,11 @@
 PODS:
-  - AWSCognito (2.6.1):
-    - AWSCore (= 2.6.1)
-  - AWSCognitoIdentityProvider (2.6.1):
-    - AWSCore (= 2.6.1)
-  - AWSCore (2.6.1)
-  - AWSS3 (2.6.1):
-    - AWSCore (= 2.6.1)
+  - AWSCognito (2.6.2):
+    - AWSCore (= 2.6.2)
+  - AWSCognitoIdentityProvider (2.6.2):
+    - AWSCore (= 2.6.2)
+  - AWSCore (2.6.2)
+  - AWSS3 (2.6.2):
+    - AWSCore (= 2.6.2)
   - ReachabilitySwift (3)
   - WingKit (0.0.1):
     - AWSCognito (~> 2.6.1)
@@ -19,16 +19,16 @@ DEPENDENCIES:
 
 EXTERNAL SOURCES:
   WingKit:
-    :path: ~/Projects/SparoLabs/WingKit
+    :path: "~/Projects/SparoLabs/WingKit"
 
 SPEC CHECKSUMS:
-  AWSCognito: 9aad635e11de0febf026e8a8acbbd345b2016801
-  AWSCognitoIdentityProvider: a335678a0024fa2b44213bc4e86b46b21773e567
-  AWSCore: e7d37fa0715def975acf1b0d75556576780088b8
-  AWSS3: 2e18ede28199a5530955dc1a65434da43dcc4d2c
+  AWSCognito: e8db76ef485fbbc1c90617217451301b1477ce45
+  AWSCognitoIdentityProvider: 8d2e86a00ca828ceaf6513b96ee3a45b70518631
+  AWSCore: 8f458961a4967be219162108f5be7df1c935639a
+  AWSS3: b3e2c4aca868cae06b5b88337ceabee25709fcc5
   ReachabilitySwift: f5b9bb30a0777fac8f09ce8b067e32faeb29bb64
-  WingKit: 19958c58f4b9266aebcf700e81efa23e6dc8399c
+  WingKit: 46248539736e30f8acabdd66d942754bc0954859
 
-PODFILE CHECKSUM: f9c37ba7157fb0c3206d78290796d1f57564b7b6
+PODFILE CHECKSUM: 65d49070ac4f7fa2795a58f7d402ecea3a75ba05
 
 COCOAPODS: 1.2.1

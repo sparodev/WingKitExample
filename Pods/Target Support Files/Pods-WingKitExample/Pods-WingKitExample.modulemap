@@ -1,6 +1,0 @@
-framework module Pods_WingKitExample {
-  umbrella header "Pods-WingKitExample-umbrella.h"
-
-  export *
-  module * { export * }
-}
