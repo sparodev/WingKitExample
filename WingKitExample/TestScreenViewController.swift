@@ -11,18 +11,12 @@ import WingKit
 
 class TestScreenViewController: UIViewController {
 
-    var manager: TestSessionManager!
+    var manager: TestSessionManager?
 
     var sensorMonitor = SensorMonitor()
     var reachabilityMonitor = ReachabilityMonitor()
 
     // MARK: - Init
-
-    init(manager: TestSessionManager) {
-        super.init(nibName: nil, bundle: nil)
-
-        self.manager = manager
-    }
 
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
@@ -33,25 +27,17 @@ class TestScreenViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
     }
-    
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+    @IBAction func cancelButtonTapped() {
+        navigationController?.dismiss(animated: true, completion: nil)
     }
-    */
-
 }
 
 extension TestScreenViewController: SensorMonitorDelegate {

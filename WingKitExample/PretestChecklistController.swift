@@ -60,11 +60,16 @@ class PretestChecklistController: UITableViewController {
         navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
     }
 
-    @IBAction func startTestButtonTapped(_ sender: Any) {
+    @IBAction func startTestButtonTapped(_ sender: UIBarButtonItem) {
+
+        sender.isEnabled = false
 
         Client.createTestSession { testSession, error in
 
             func handleError(_ error: Error? = nil) {
+
+                sender.isEnabled = true
+
                 if let error = error {
                     print("ERROR: \(error)")
                 }
@@ -89,11 +94,15 @@ class PretestChecklistController: UITableViewController {
                 return
             }
 
-            let testScreenViewController = TestScreenViewController(
-                manager: TestSessionManager(testSession: testSession)
-            )
+            guard let navigationController = UIStoryboard(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "TestScreenNavigationController") as? UINavigationController,
+                let testScreenController = navigationController.viewControllers.first as? TestScreenViewController else {
+                return
+            }
 
-            self.show(testScreenViewController, sender: nil)
+            testScreenController.manager = TestSessionManager(testSession: testSession)
+
+            self.show(navigationController, sender: nil)
+            sender.isEnabled = true
         }
     }
 
