@@ -5,7 +5,6 @@
     </device>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13173"/>
-        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -117,63 +116,6 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="KdO-SI-GRT" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-12" y="-496"/>
-        </scene>
-        <!--Navigation Controller-->
-        <scene sceneID="Yjj-XG-To9">
-            <objects>
-                <navigationController storyboardIdentifier="TestScreenNavigationController" id="knt-la-Rxu" sceneMemberID="viewController">
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="csI-hk-fSu">
-                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <color key="barTintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                    </navigationBar>
-                    <connections>
-                        <segue destination="Wo1-bb-tY5" kind="relationship" relationship="rootViewController" id="Ouf-bH-m7s"/>
-                    </connections>
-                </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="ySN-fr-2xy" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1162" y="-1045"/>
-        </scene>
-        <!--Test Screen View Controller-->
-        <scene sceneID="FWD-rt-Yvc">
-            <objects>
-                <viewController storyboardIdentifier="TestScreenViewController" id="Wo1-bb-tY5" customClass="TestScreenViewController" customModule="WingKitExample" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="Z0d-rr-1zM">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="1000" text="Tap on the start button to being a lung function test" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xcO-le-Jgy">
-                                <rect key="frame" x="16" y="112" width="343" height="21"/>
-                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                        </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <constraints>
-                            <constraint firstItem="xcO-le-Jgy" firstAttribute="top" secondItem="w1p-xa-51N" secondAttribute="top" constant="48" id="AXI-5h-qge"/>
-                            <constraint firstItem="xcO-le-Jgy" firstAttribute="bottom" relation="lessThanOrEqual" secondItem="w1p-xa-51N" secondAttribute="bottom" constant="-10" id="R7R-5q-a8l"/>
-                            <constraint firstItem="w1p-xa-51N" firstAttribute="trailing" secondItem="xcO-le-Jgy" secondAttribute="trailing" constant="16" id="pLa-ci-jcf"/>
-                            <constraint firstItem="xcO-le-Jgy" firstAttribute="leading" secondItem="w1p-xa-51N" secondAttribute="leading" constant="16" id="yXj-SH-Unp"/>
-                        </constraints>
-                        <viewLayoutGuide key="safeArea" id="w1p-xa-51N"/>
-                    </view>
-                    <navigationItem key="navigationItem" largeTitleDisplayMode="never" id="fBS-Tv-5h8">
-                        <barButtonItem key="leftBarButtonItem" title="Item" systemItem="cancel" id="O0k-i8-ibW">
-                            <color key="tintColor" red="0.0" green="0.68627450980000004" blue="0.81176470590000005" alpha="1" colorSpace="deviceRGB"/>
-                            <connections>
-                                <action selector="cancelButtonTapped" destination="Wo1-bb-tY5" id="sLq-Pw-of1"/>
-                            </connections>
-                        </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" title="Start" id="tYL-JY-KMS">
-                            <color key="tintColor" red="0.0" green="0.68627450980000004" blue="0.81176470590000005" alpha="1" colorSpace="deviceRGB"/>
-                        </barButtonItem>
-                    </navigationItem>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="6cc-VI-ipK" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="2007" y="-1044"/>
         </scene>
     </scenes>
 </document>

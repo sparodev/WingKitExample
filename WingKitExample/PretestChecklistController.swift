@@ -94,21 +94,15 @@ class PretestChecklistController: UITableViewController {
                 return
             }
 
-            guard let navigationController = UIStoryboard(name: "Main", bundle: Bundle.main).instantiateViewController(withIdentifier: "TestScreenNavigationController") as? UINavigationController,
-                let testScreenController = navigationController.viewControllers.first as? TestScreenViewController else {
-                return
-            }
-
-            testScreenController.manager = TestSessionManager(testSession: testSession)
-
-            self.show(navigationController, sender: nil)
+            self.show(TestScreenViewController(sessionManager: TestSessionManager(testSession: testSession)),
+                      sender: nil)
             sender.isEnabled = true
         }
     }
 
     func reloadStartTestEnabledState() {
         startTestBarButton.isEnabled = reachabilityMonitor.isConnectedToInternet
-            && sensorMonitor.isPluggedIn
+//            && sensorMonitor.isPluggedIn
             && ambientNoiseMonitor.isBelowThreshold
     }
 
