@@ -95,6 +95,8 @@ class TestScreenViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        navigationItem.largeTitleDisplayMode = .never
+
         recorder.delegate = self
 
         reachabilityMonitor.delegate = self
@@ -107,6 +109,11 @@ class TestScreenViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
+        do {
+            try recorder.configure()
+        } catch {
+
+        }
         navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
 
         do {
@@ -280,6 +287,11 @@ extension TestScreenViewController: TestRecorderDelegate {
         case .recording: return
         case .finished:
 
+            UIView.animate(withDuration: 0.3, delay: 0, options: [.beginFromCurrentState], animations: {
+                self.testScreenView.signalStrengthCircleHeightConstraint?.constant = self.testScreenView.signalStrengthCircleInitialDiameter
+                self.testScreenView.layoutIfNeeded()
+            }, completion: nil)
+
             guard recorder.signalStrengthThresholdPassed else {
 
                 let alert = UIAlertController(
@@ -292,6 +304,8 @@ extension TestScreenViewController: TestRecorderDelegate {
                     style: .default, handler: { _ in
                         self.transitionToNextTest()
                 }))
+
+                self.present(alert, animated: true, completion: nil)
                 return
             }
 
@@ -303,5 +317,17 @@ extension TestScreenViewController: TestRecorderDelegate {
 
     func signalStrengthChanged(_ strength: Double) {
         print("Signal strength: \(strength)")
+
+        let defaultAvailableSpace = testScreenView.frame.size.height - 100 - testScreenView.defaultSignalStrengthCircleVisibleHeight - (testScreenView.messageLabel.frame.origin.y + testScreenView.messageLabel.frame.size.height)
+        let amountToScaleBy = CGFloat(strength) * defaultAvailableSpace
+        let updatedHeight = self.testScreenView.signalStrengthCircleInitialDiameter + amountToScaleBy
+        print("circle height: \(updatedHeight)")
+
+        UIView.animate(withDuration: 0.1, delay: 0, options: [.beginFromCurrentState], animations: {
+            self.testScreenView.signalStrengthCircleHeightConstraint?.constant = updatedHeight
+            self.testScreenView.layoutIfNeeded()
+        }, completion: nil)
+
+
     }
 }
