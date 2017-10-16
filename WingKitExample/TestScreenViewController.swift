@@ -164,20 +164,97 @@ class TestScreenViewController: UIViewController {
         navigationController?.dismiss(animated: true, completion: nil)
     }
 
-    func uploadRecording() {
+    func updateStartButtonEnabledState() {
+        startBarButton.isEnabled = recorder.state == .ready
+            && reachabilityMonitor.isConnectedToInternet
+            && sensorMonitor.isPluggedIn
+    }
+
+    func processRecording() {
+
+        uploadRecording { (error) in
+
+            if let error = error {
+
+                let alert = UIAlertController(
+                    title: "Upload Error",
+                    message: "\(error)",
+                    preferredStyle: .alert)
+
+                alert.addAction(UIAlertAction(title: "Cancel Test", style: .cancel, handler: { _ in
+                    self.dismiss(animated: true, completion: {})
+                }))
+
+                alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { _ in
+                    self.transitionToNextTest()
+                }))
+
+                self.present(alert, animated: true, completion: nil)
+
+                return
+            }
+
+            self.sessionManager.updateState()
+
+            var alertMessage = ""
+            var alertActions = [UIAlertAction]()
+
+            let nextTestAction = UIAlertAction(title: "Next Test", style: .default, handler: { (_) in
+                self.transitionToNextTest()
+            })
+
+            let dismissAction = UIAlertAction(title: "Ok", style: .default, handler: { (_) in
+                self.dismiss(animated: true, completion: nil)
+            })
+
+            switch self.sessionManager.state {
+            case .goodTestFirst:
+
+                alertMessage = "Your test was processed successfully. Tap Next to continue."
+                alertActions = [nextTestAction]
+
+            case .notProcessedTestFirst:
+
+                alertMessage = "An error occurred while processing this test. Tap Next Test to try it again."
+                alertActions = [nextTestAction]
+
+            case .notReproducibleTestFirst:
+
+                alertMessage = "An error occurred while processing this test. Tap Next Test to try it again."
+                alertActions = [nextTestAction]
+
+            case .notProcessedTestFinal:
+
+                alertMessage = "Another processing error occurred. Start a new test session in order to try again."
+                alertActions = [dismissAction]
+
+            case .notReproducibleTestFinal:
+
+                alertMessage = "The results from your tests aren't reproducible. Please begin a new test session to try again."
+                alertActions = [dismissAction]
+
+            case .reproducibleTestFinal:
+
+                alertMessage = "You've completed the test session with reproducible results!"
+                alertActions = [dismissAction]
+            default: return
+            }
+
+            let alert = UIAlertController(title: "Test Complete",
+                                          message: alertMessage,
+                                          preferredStyle: .alert)
+
+            for action in alertActions {
+                alert.addAction(action)
+            }
+
+            self.present(alert, animated: true, completion: nil)
+        }
+    }
+
+    func uploadRecording(completion: @escaping (Error?) -> Void) {
 
         guard let recordingFilepath = recorder.recordingFilepath else {
-
-            let alert = UIAlertController(
-                title: "Recording Error",
-                message: "An error occurred while recording your test. Please try again.",
-                preferredStyle: .alert)
-
-            alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { _ in
-                self.transitionToNextTest()
-            }))
-
-            present(alert, animated: true, completion: nil)
 
             return
         }
@@ -189,6 +266,16 @@ class TestScreenViewController: UIViewController {
                     title: "Upload Error",
                     message: "\(error)",
                     preferredStyle: .alert)
+
+                alert.addAction(UIAlertAction(title: "Cancel Test", style: .cancel, handler: { _ in
+                    self.dismiss(animated: true, completion: {})
+                }))
+
+                alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { _ in
+                    self.uploadRecording(completion: completion)
+                }))
+
+                self.present(alert, animated: true, completion: nil)
                 return
             }
 
@@ -277,6 +364,42 @@ extension TestScreenViewController: ReachabilityMonitorDelegate {
 
     func reachabilityMonitorDidChangeReachability(_ monitor: ReachabilityMonitor) {
 
+        updateStartButtonEnabledState()
+
+        switch recorder.state {
+        case .ready:
+
+            if monitor.isConnectedToInternet {
+
+                if let activeAlertController = activeAlert,
+                    let alertReason = activeAlertReason,
+                    alertReason == .internetDisconnected {
+
+                    activeAlertController.dismiss(animated: true, completion: {
+                        self.activeAlert = nil
+                        self.activeAlertReason = nil
+                    })
+                }
+
+            } else {
+
+                self.presentTestInteruptionAlert(for: .internetDisconnected, actions: [
+                    UIAlertAction(title: "Ok", style: .default, handler: nil)
+                    ])
+            }
+
+        case .recording:
+
+            if !monitor.isConnectedToInternet {
+                self.presentTestInteruptionAlert(for: .internetDisconnected, actions: [
+                    UIAlertAction(title: "Next Test", style: .default, handler: { (_) in
+                        self.transitionToNextTest()
+                    })]
+                )
+            }
+
+        default: return
+        }
     }
 }
 
@@ -309,7 +432,7 @@ extension TestScreenViewController: TestRecorderDelegate {
                 return
             }
 
-            uploadRecording()
+            processRecording()
 
         default: return
         }
