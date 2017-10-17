@@ -50,15 +50,11 @@ class TestScreenViewController: UIViewController {
     var recorder = TestSessionRecorder()
 
     lazy var cancelBarButton: UIBarButtonItem = {
-        let button = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelButtonTapped))
-        button.tintColor = UIColor(red: 0.0/255.0, green: 177.0/255.0, blue: 211.0/255.0, alpha: 1.0)
-        return button
+        return UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelButtonTapped))
     }()
 
     lazy var startBarButton: UIBarButtonItem = {
-        let button = UIBarButtonItem(title: "Start Test", style: .plain, target: self, action: #selector(startButtonTapped))
-        button.tintColor = UIColor(red: 0.0/255.0, green: 177.0/255.0, blue: 211.0/255.0, alpha: 1.0)
-        return button
+        return UIBarButtonItem(title: "Start Test", style: .plain, target: self, action: #selector(startButtonTapped))
     }()
 
     var sensorMonitor = SensorMonitor()
@@ -95,7 +91,9 @@ class TestScreenViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        navigationItem.largeTitleDisplayMode = .never
+        if #available(iOS 11.0, *) {
+            navigationItem.largeTitleDisplayMode = .never
+        }
 
         recorder.delegate = self
 
@@ -109,12 +107,27 @@ class TestScreenViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        do {
-            try recorder.configure()
-        } catch {
-
-        }
         navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
+
+        if !recorder.skipRecording {
+            do {
+                try recorder.configure()
+            } catch {
+
+            }
+
+            sensorMonitor.start()
+
+            if !sensorMonitor.isPluggedIn {
+                let alert = UIAlertController(title: "Where's the sensor?", message: "Be sure Wing is plugged in and be careful not to pull on the cord when blowing into Wing!", preferredStyle: .alert)
+
+                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (_) in
+                    alert.dismiss(animated: true, completion: {
+                        self.dismiss(animated: true, completion: nil)
+                    })
+                }))
+            }
+        }
 
         do {
             try reachabilityMonitor.start()
@@ -132,18 +145,6 @@ class TestScreenViewController: UIViewController {
 
             self.present(alert, animated: true, completion: nil)
         }
-
-        sensorMonitor.start()
-
-        if !sensorMonitor.isPluggedIn {
-            let alert = UIAlertController(title: "Where's the sensor?", message: "Be sure Wing is plugged in and be careful not to pull on the cord when blowing into Wing!", preferredStyle: .alert)
-
-            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (_) in
-                alert.dismiss(animated: true, completion: {
-                    self.dismiss(animated: true, completion: nil)
-                })
-            }))
-        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -152,6 +153,8 @@ class TestScreenViewController: UIViewController {
         reachabilityMonitor.stop()
         sensorMonitor.stop()
     }
+
+    // MARK: - Button Actions
 
     @objc func startButtonTapped() {
 
@@ -167,10 +170,14 @@ class TestScreenViewController: UIViewController {
     func updateStartButtonEnabledState() {
         startBarButton.isEnabled = recorder.state == .ready
             && reachabilityMonitor.isConnectedToInternet
-            && sensorMonitor.isPluggedIn
+            && (sensorMonitor.isPluggedIn || recorder.skipRecording)
     }
 
+    // MARK: - Process Recording
+
     func processRecording() {
+
+        testScreenView.showActivityIndicator(with: "UPLOADING")
 
         uploadRecording { (error) in
 
@@ -194,93 +201,81 @@ class TestScreenViewController: UIViewController {
                 return
             }
 
-            self.sessionManager.updateState()
+            self.testScreenView.showActivityIndicator(with: "PROCESSING")
 
-            var alertMessage = ""
-            var alertActions = [UIAlertAction]()
+            self.sessionManager.refreshTestSession(completion: { (error) in
 
-            let nextTestAction = UIAlertAction(title: "Next Test", style: .default, handler: { (_) in
-                self.transitionToNextTest()
+                self.testScreenView.hideActivityIndicator()
+
+                if let error = error {
+
+                    return
+                }
+                
+                var alertMessage = ""
+                var alertActions = [UIAlertAction]()
+                
+                let nextTestAction = UIAlertAction(title: "Next Test", style: .default, handler: { (_) in
+                    self.transitionToNextTest()
+                })
+                
+                let dismissAction = UIAlertAction(title: "Dismiss", style: .default, handler: { (_) in
+                    self.dismiss(animated: true, completion: nil)
+                })
+                
+                switch self.sessionManager.state {
+                case .goodTestFirst:
+                    
+                    alertMessage = "Your test was processed successfully. Tap Next to continue."
+                    alertActions = [nextTestAction]
+                    
+                case .notProcessedTestFirst:
+                    
+                    alertMessage = "An error occurred while processing this test. Tap Next Test to try it again."
+                    alertActions = [nextTestAction]
+                    
+                case .notReproducibleTestFirst:
+                    
+                    alertMessage = "An error occurred while processing this test. Tap Next Test to try it again."
+                    alertActions = [nextTestAction]
+                    
+                case .notProcessedTestFinal:
+                    
+                    alertMessage = "Another processing error occurred. Start a new test session in order to try again."
+                    alertActions = [dismissAction]
+                    
+                case .notReproducibleTestFinal:
+                    
+                    alertMessage = "The results from your tests aren't reproducible. Please begin a new test session to try again."
+                    alertActions = [dismissAction]
+                    
+                case .reproducibleTestFinal:
+                    
+                    alertMessage = "You've completed the test session with reproducible results!"
+                    alertActions = [dismissAction]
+                default: return
+                }
+                
+                let alert = UIAlertController(title: "Test Complete",
+                                              message: alertMessage,
+                                              preferredStyle: .alert)
+                
+                for action in alertActions {
+                    alert.addAction(action)
+                }
+
+                self.present(alert, animated: true, completion: nil)
             })
-
-            let dismissAction = UIAlertAction(title: "Ok", style: .default, handler: { (_) in
-                self.dismiss(animated: true, completion: nil)
-            })
-
-            switch self.sessionManager.state {
-            case .goodTestFirst:
-
-                alertMessage = "Your test was processed successfully. Tap Next to continue."
-                alertActions = [nextTestAction]
-
-            case .notProcessedTestFirst:
-
-                alertMessage = "An error occurred while processing this test. Tap Next Test to try it again."
-                alertActions = [nextTestAction]
-
-            case .notReproducibleTestFirst:
-
-                alertMessage = "An error occurred while processing this test. Tap Next Test to try it again."
-                alertActions = [nextTestAction]
-
-            case .notProcessedTestFinal:
-
-                alertMessage = "Another processing error occurred. Start a new test session in order to try again."
-                alertActions = [dismissAction]
-
-            case .notReproducibleTestFinal:
-
-                alertMessage = "The results from your tests aren't reproducible. Please begin a new test session to try again."
-                alertActions = [dismissAction]
-
-            case .reproducibleTestFinal:
-
-                alertMessage = "You've completed the test session with reproducible results!"
-                alertActions = [dismissAction]
-            default: return
-            }
-
-            let alert = UIAlertController(title: "Test Complete",
-                                          message: alertMessage,
-                                          preferredStyle: .alert)
-
-            for action in alertActions {
-                alert.addAction(action)
-            }
-
-            self.present(alert, animated: true, completion: nil)
         }
     }
 
     func uploadRecording(completion: @escaping (Error?) -> Void) {
 
         guard let recordingFilepath = recorder.recordingFilepath else {
-
             return
         }
 
-        sessionManager.uploadRecording(atFilepath: recordingFilepath) { (error) in
-
-            if let error = error {
-                let alert = UIAlertController(
-                    title: "Upload Error",
-                    message: "\(error)",
-                    preferredStyle: .alert)
-
-                alert.addAction(UIAlertAction(title: "Cancel Test", style: .cancel, handler: { _ in
-                    self.dismiss(animated: true, completion: {})
-                }))
-
-                alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { _ in
-                    self.uploadRecording(completion: completion)
-                }))
-
-                self.present(alert, animated: true, completion: nil)
-                return
-            }
-
-
-        }
+        sessionManager.uploadRecording(atFilepath: recordingFilepath, completion: completion)
     }
 
     func transitionToNextTest() {
@@ -305,6 +300,8 @@ class TestScreenViewController: UIViewController {
 extension TestScreenViewController: SensorMonitorDelegate {
 
     func sensorStateDidChange(_ monitor: SensorMonitor) {
+
+        guard !recorder.skipRecording else { return }
 
         switch recorder.state {
         case .ready:
@@ -415,7 +412,7 @@ extension TestScreenViewController: TestRecorderDelegate {
                 self.testScreenView.layoutIfNeeded()
             }, completion: nil)
 
-            guard recorder.signalStrengthThresholdPassed else {
+            guard recorder.signalStrengthThresholdPassed || recorder.skipRecording  else {
 
                 let alert = UIAlertController(
                     title: "Bad Recording",

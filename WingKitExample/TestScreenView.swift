@@ -11,6 +11,11 @@ import UIKit
 class TestScreenView: UIView {
 
     let messageLabel = UILabel(frame: .zero)
+
+    let activityIndicatorStackView = UIStackView(frame: .zero)
+    let activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.gray)
+    let activityIndicatorMessageLabel = UILabel(frame: .zero)
+
     let signalStrengthCircle = UIView(frame: .zero)
 
     let defaultSignalStrengthCircleVisibleHeight: CGFloat = 100
@@ -35,11 +40,34 @@ class TestScreenView: UIView {
         NSLayoutConstraint.activate([
             messageLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
             messageLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 20),
-            messageLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -20),
-            messageLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 20)
+            messageLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -20)
             ])
 
-        signalStrengthCircle.backgroundColor = UIColor(red: 0.0/255.0, green: 177.0/255.0, blue: 211.0/255.0, alpha: 1.0)
+        if #available(iOS 11.0, *) {
+            messageLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 20).isActive = true
+        } else {
+            messageLabel.topAnchor.constraint(equalTo: topAnchor, constant: 20).isActive = true
+        }
+
+        activityIndicatorStackView.axis = .vertical
+        activityIndicatorStackView.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicatorStackView.alignment = .center
+        activityIndicatorStackView.spacing = 5
+        addSubview(activityIndicatorStackView)
+
+        activityIndicatorStackView.addArrangedSubview(activityIndicator)
+
+        activityIndicatorMessageLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        activityIndicatorMessageLabel.textAlignment = .center
+        activityIndicatorMessageLabel.textColor = UIColor.gray
+        activityIndicatorStackView.addArrangedSubview(activityIndicatorMessageLabel)
+
+        NSLayoutConstraint.activate([
+            activityIndicatorStackView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            activityIndicatorStackView.centerYAnchor.constraint(equalTo: centerYAnchor)
+            ])
+
+        signalStrengthCircle.backgroundColor = UIView.appearance().tintColor
         signalStrengthCircle.layer.cornerRadius = signalStrengthCircleInitialDiameter/2
         signalStrengthCircle.translatesAutoresizingMaskIntoConstraints = false
         signalStrengthCircle.clipsToBounds = true
@@ -64,5 +92,14 @@ class TestScreenView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    func showActivityIndicator(with message: String) {
+        activityIndicatorMessageLabel.text = message
+        activityIndicator.startAnimating()
+        activityIndicatorStackView.isHidden = false
+    }
 
+    func hideActivityIndicator() {
+        activityIndicator.stopAnimating()
+        activityIndicatorStackView.isHidden = true
+    }
 }
