@@ -165,6 +165,7 @@ class TestScreenViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
+        recorder.stopRecording()
         reachabilityMonitor.stop()
         sensorMonitor.stop()
     }
@@ -433,9 +434,14 @@ extension TestScreenViewController: ReachabilityMonitorDelegate {
 
 extension TestScreenViewController: TestRecorderDelegate {
 
-    func recorderStateChanged(_ state: TestRecorderState) {
+    func recorderStateChanged(_ state: TestSessionRecorder.State) {
         switch state {
-        case .recording: return
+        case .recording:
+
+            UIView.animate(withDuration: 0.3, animations: {
+                self.testScreenView.messageLabel.alpha = 0
+            })
+
         case .finished:
 
             UIView.animate(withDuration: 0.3, delay: 0, options: [.beginFromCurrentState], animations: {
@@ -467,18 +473,13 @@ extension TestScreenViewController: TestRecorderDelegate {
     }
 
     func signalStrengthChanged(_ strength: Double) {
-        print("Signal strength: \(strength)")
-
         let defaultAvailableSpace = testScreenView.frame.size.height - 100 - testScreenView.defaultSignalStrengthCircleVisibleHeight - (testScreenView.messageLabel.frame.origin.y + testScreenView.messageLabel.frame.size.height)
         let amountToScaleBy = CGFloat(strength) * defaultAvailableSpace
-        let updatedHeight = self.testScreenView.signalStrengthCircleInitialDiameter + amountToScaleBy
-        print("circle height: \(updatedHeight)")
 
+        let updatedHeight = self.testScreenView.signalStrengthCircleInitialDiameter + amountToScaleBy
         UIView.animate(withDuration: 0.1, delay: 0, options: [.beginFromCurrentState], animations: {
             self.testScreenView.signalStrengthCircleHeightConstraint?.constant = updatedHeight
             self.testScreenView.layoutIfNeeded()
         }, completion: nil)
-
-
     }
 }

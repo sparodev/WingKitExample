@@ -46,7 +46,7 @@ class TestScreenView: UIView {
         if #available(iOS 11.0, *) {
             messageLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 20).isActive = true
         } else {
-            messageLabel.topAnchor.constraint(equalTo: topAnchor, constant: 20).isActive = true
+            messageLabel.topAnchor.constraint(equalTo: topAnchor, constant: 60).isActive = true
         }
 
         activityIndicatorStackView.axis = .vertical
@@ -68,7 +68,6 @@ class TestScreenView: UIView {
             ])
 
         signalStrengthCircle.backgroundColor = UIView.appearance().tintColor
-        signalStrengthCircle.layer.cornerRadius = signalStrengthCircleInitialDiameter/2
         signalStrengthCircle.translatesAutoresizingMaskIntoConstraints = false
         signalStrengthCircle.clipsToBounds = true
 
@@ -78,7 +77,7 @@ class TestScreenView: UIView {
         signalStrengthCircleHeightConstraint?.isActive = true
 
         NSLayoutConstraint.activate([
-            signalStrengthCircle.widthAnchor.constraint(equalToConstant: signalStrengthCircleInitialDiameter),
+            signalStrengthCircle.widthAnchor.constraint(equalTo: widthAnchor),
             signalStrengthCircle.bottomAnchor.constraint(
                 equalTo: bottomAnchor,
                 constant: signalStrengthCircleInitialDiameter - defaultSignalStrengthCircleVisibleHeight),
@@ -90,6 +89,12 @@ class TestScreenView: UIView {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        signalStrengthCircle.layer.cornerRadius = frame.size.width/2
     }
 
     func showActivityIndicator(with message: String) {

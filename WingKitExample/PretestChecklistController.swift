@@ -56,6 +56,12 @@ class PretestChecklistController: UITableViewController {
         reachabilityMonitor.delegate = self
         sensorMonitor.delegate = self
         ambientNoiseMonitor.delegate = self
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
 
         do {
             try reachabilityMonitor.start()
@@ -84,10 +90,12 @@ class PretestChecklistController: UITableViewController {
         updateMonitorStatus()
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
 
-        navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
+        reachabilityMonitor.stop()
+        sensorMonitor.stop()
+        ambientNoiseMonitor.stop()
     }
 
     @objc func cancelButtonTapped() {
