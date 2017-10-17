@@ -114,6 +114,21 @@ class TestScreenViewController: UIViewController {
                 try recorder.configure()
             } catch {
 
+                let alert = UIAlertController(
+                    title: "Recording Error",
+                    message: error.localizedDescription,
+                    preferredStyle: .alert
+                )
+
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
+                    self.dismiss(animated: true, completion: nil)
+                }))
+                
+                alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { _ in
+                    self.transitionToNextTest()
+                }))
+
+                self.present(alert, animated: true, completion: nil)
             }
 
             sensorMonitor.start()
@@ -209,6 +224,21 @@ class TestScreenViewController: UIViewController {
 
                 if let error = error {
 
+                    let alert = UIAlertController(
+                        title: "Retrieve Test Session Error",
+                        message: "\(error)",
+                        preferredStyle: .alert)
+
+                    alert.addAction(UIAlertAction(title: "Cancel Test", style: .cancel, handler: { _ in
+                        self.dismiss(animated: true, completion: {})
+                    }))
+
+                    alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { _ in
+                        self.transitionToNextTest()
+                    }))
+
+                    self.present(alert, animated: true, completion: nil)
+
                     return
                 }
                 
@@ -226,7 +256,7 @@ class TestScreenViewController: UIViewController {
                 switch self.sessionManager.state {
                 case .goodTestFirst:
                     
-                    alertMessage = "Your test was processed successfully. Tap Next to continue."
+                    alertMessage = "Your test was processed successfully. Tap Next Test to continue."
                     alertActions = [nextTestAction]
                     
                 case .notProcessedTestFirst:
@@ -236,7 +266,7 @@ class TestScreenViewController: UIViewController {
                     
                 case .notReproducibleTestFirst:
                     
-                    alertMessage = "An error occurred while processing this test. Tap Next Test to try it again."
+                    alertMessage = "Your current tests' results aren't reproducible. Tap Next Test to take another test."
                     alertActions = [nextTestAction]
                     
                 case .notProcessedTestFinal:
@@ -253,6 +283,7 @@ class TestScreenViewController: UIViewController {
                     
                     alertMessage = "You've completed the test session with reproducible results!"
                     alertActions = [dismissAction]
+
                 default: return
                 }
                 
