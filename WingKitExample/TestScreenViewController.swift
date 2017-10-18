@@ -434,7 +434,7 @@ extension TestScreenViewController: ReachabilityMonitorDelegate {
 
 extension TestScreenViewController: TestRecorderDelegate {
 
-    func recorderStateChanged(_ state: TestSessionRecorder.State) {
+    func recorderStateChanged(_ state: TestRecorderState) {
         switch state {
         case .recording:
 
