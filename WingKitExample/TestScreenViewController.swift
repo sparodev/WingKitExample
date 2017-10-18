@@ -473,7 +473,7 @@ extension TestScreenViewController: TestRecorderDelegate {
     }
 
     func signalStrengthChanged(_ strength: Double) {
-        let defaultAvailableSpace = testScreenView.frame.size.height - 100 - testScreenView.defaultSignalStrengthCircleVisibleHeight - (testScreenView.messageLabel.frame.origin.y + testScreenView.messageLabel.frame.size.height)
+        let defaultAvailableSpace = testScreenView.frame.size.height - 100 - testScreenView.defaultSignalStrengthCircleVisibleHeight
         let amountToScaleBy = CGFloat(strength) * defaultAvailableSpace
 
         let updatedHeight = self.testScreenView.signalStrengthCircleInitialDiameter + amountToScaleBy

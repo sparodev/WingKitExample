@@ -46,7 +46,7 @@ class TestScreenView: UIView {
         if #available(iOS 11.0, *) {
             messageLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 20).isActive = true
         } else {
-            messageLabel.topAnchor.constraint(equalTo: topAnchor, constant: 60).isActive = true
+            messageLabel.topAnchor.constraint(equalTo: topAnchor, constant: 84).isActive = true
         }
 
         activityIndicatorStackView.axis = .vertical
