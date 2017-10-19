@@ -144,7 +144,7 @@ class PretestChecklistController: UITableViewController {
 
     func reloadStartTestEnabledState() {
         startTestBarButton.isEnabled = reachabilityMonitor.isConnectedToInternet
-//            && sensorMonitor.isPluggedIn
+            && sensorMonitor.isPluggedIn
             && ambientNoiseMonitor.isBelowThreshold
     }
 

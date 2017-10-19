@@ -109,39 +109,37 @@ class TestScreenViewController: UIViewController {
 
         navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
 
-        if !recorder.skipRecording {
-            do {
-                try recorder.configure()
-            } catch {
+        do {
+            try recorder.configure()
+        } catch {
 
-                let alert = UIAlertController(
-                    title: "Recording Error",
-                    message: error.localizedDescription,
-                    preferredStyle: .alert
-                )
+            let alert = UIAlertController(
+                title: "Recording Error",
+                message: error.localizedDescription,
+                preferredStyle: .alert
+            )
 
-                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
+                self.dismiss(animated: true, completion: nil)
+            }))
+
+            alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { _ in
+                self.transitionToNextTest()
+            }))
+
+            self.present(alert, animated: true, completion: nil)
+        }
+
+        sensorMonitor.start()
+
+        if !sensorMonitor.isPluggedIn {
+            let alert = UIAlertController(title: "Where's the sensor?", message: "Be sure Wing is plugged in and be careful not to pull on the cord when blowing into Wing!", preferredStyle: .alert)
+
+            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (_) in
+                alert.dismiss(animated: true, completion: {
                     self.dismiss(animated: true, completion: nil)
-                }))
-                
-                alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { _ in
-                    self.transitionToNextTest()
-                }))
-
-                self.present(alert, animated: true, completion: nil)
-            }
-
-            sensorMonitor.start()
-
-            if !sensorMonitor.isPluggedIn {
-                let alert = UIAlertController(title: "Where's the sensor?", message: "Be sure Wing is plugged in and be careful not to pull on the cord when blowing into Wing!", preferredStyle: .alert)
-
-                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (_) in
-                    alert.dismiss(animated: true, completion: {
-                        self.dismiss(animated: true, completion: nil)
-                    })
-                }))
-            }
+                })
+            }))
         }
 
         do {
@@ -186,7 +184,7 @@ class TestScreenViewController: UIViewController {
     func updateStartButtonEnabledState() {
         startBarButton.isEnabled = recorder.state == .ready
             && reachabilityMonitor.isConnectedToInternet
-            && (sensorMonitor.isPluggedIn || recorder.skipRecording)
+            && sensorMonitor.isPluggedIn
     }
 
     // MARK: - Process Recording
@@ -333,8 +331,6 @@ extension TestScreenViewController: SensorMonitorDelegate {
 
     func sensorStateDidChange(_ monitor: SensorMonitor) {
 
-        guard !recorder.skipRecording else { return }
-
         switch recorder.state {
         case .ready:
 
@@ -449,7 +445,7 @@ extension TestScreenViewController: TestRecorderDelegate {
                 self.testScreenView.layoutIfNeeded()
             }, completion: nil)
 
-            guard recorder.signalStrengthThresholdPassed || recorder.skipRecording  else {
+            guard recorder.signalStrengthThresholdPassed else {
 
                 let alert = UIAlertController(
                     title: "Bad Recording",
