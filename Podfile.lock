@@ -15,11 +15,11 @@ PODS:
     - ReachabilitySwift (~> 3)
 
 DEPENDENCIES:
-  - WingKit (from `~/Projects/SparoLabs/WingKit`)
+  - WingKit (from `../WingKit`)
 
 EXTERNAL SOURCES:
   WingKit:
-    :path: ~/Projects/SparoLabs/WingKit
+    :path: ../WingKit
 
 SPEC CHECKSUMS:
   AWSCognito: e8db76ef485fbbc1c90617217451301b1477ce45
@@ -29,6 +29,6 @@ SPEC CHECKSUMS:
   ReachabilitySwift: f5b9bb30a0777fac8f09ce8b067e32faeb29bb64
   WingKit: 0f556ceadc334540d8a2453aa8811e5e28ab32e5
 
-PODFILE CHECKSUM: 65d49070ac4f7fa2795a58f7d402ecea3a75ba05
+PODFILE CHECKSUM: c765ca49e9d39e8210e97291474c82a5684d7da2
 
 COCOAPODS: 1.2.1

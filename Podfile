@@ -6,6 +6,6 @@ target 'WingKitExample' do
   use_frameworks!
 
   # Pods for WingKitExample
-  pod 'WingKit', :path => '~/Projects/SparoLabs/WingKit'
+  pod 'WingKit', :path => '../WingKit'
 
 end
