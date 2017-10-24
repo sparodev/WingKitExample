@@ -11,21 +11,58 @@ import UIKit
 
 class PretestChecklistController: UITableViewController {
 
+    enum TableRow: Int {
+        case internetConnection
+        case ambientNoise
+        case sensorConnection
+
+        var title: String {
+            switch self {
+            case .internetConnection: return "Internet Connected"
+            case .ambientNoise: return "Quiet Environment"
+            case .sensorConnection: return "Sensor Connected"
+            }
+        }
+    }
+
     var reachabilityMonitor = ReachabilityMonitor()
     var sensorMonitor = SensorMonitor()
     var ambientNoiseMonitor = AmbientNoiseMonitor()
 
-    @IBOutlet weak var startTestBarButton: UIBarButtonItem!
-    @IBOutlet weak var internetConnectionCell: UITableViewCell!
-    @IBOutlet weak var quietEnvironmentCell: UITableViewCell!
-    @IBOutlet weak var sensorConnectionCell: UITableViewCell!
+    lazy var cancelBarButton: UIBarButtonItem = {
+        return UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelButtonTapped))
+    }()
+
+    lazy var startTestBarButton: UIBarButtonItem = {
+        return UIBarButtonItem(title: "Start Test", style: .plain,
+                               target: self, action: #selector(startTestButtonTapped(_:)))
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        title = "Pre-test Checklist"
+
+        if #available(iOS 11.0, *) {
+            navigationItem.largeTitleDisplayMode = .always
+        }
+
+        navigationItem.rightBarButtonItem = startTestBarButton
+        navigationItem.leftBarButtonItem = cancelBarButton
+
+        tableView.isScrollEnabled = false
+        tableView.separatorStyle = .none
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "ReuseIdentifier")
+
         reachabilityMonitor.delegate = self
         sensorMonitor.delegate = self
         ambientNoiseMonitor.delegate = self
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
 
         do {
             try reachabilityMonitor.start()
@@ -54,38 +91,20 @@ class PretestChecklistController: UITableViewController {
         updateMonitorStatus()
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
 
-        navigationController?.navigationBar.setValue(true, forKey: "hidesShadow")
+        reachabilityMonitor.stop()
+        sensorMonitor.stop()
+        ambientNoiseMonitor.stop()
     }
 
-    @IBAction func startTestButtonTapped(_ sender: Any) {
+    @objc func cancelButtonTapped() {
+        dismiss(animated: true, completion: nil)
+    }
 
-        Client.createTestSession { testSession, error in
+    @objc func startTestButtonTapped(_ sender: UIBarButtonItem) {
 
-            if let error = error {
-
-                let alert = UIAlertController(
-                    title: "Create Test Session Error",
-                    message: "\(error)",
-                    preferredStyle: .alert
-                )
-
-                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-                self.present(alert, animated: true, completion: nil)
-                
-                return
-            }
-
-            guard let testSession = testSession else {
-
-                return
-            }
-
-            let sessionManager = TestSessionManager(testSession: testSession)
-
-        }
     }
 
     func reloadStartTestEnabledState() {
@@ -96,18 +115,50 @@ class PretestChecklistController: UITableViewController {
 
     func updateMonitorStatus() {
 
-        internetConnectionCell.accessoryType = reachabilityMonitor.isConnectedToInternet ? .checkmark : .none
-        quietEnvironmentCell.accessoryType = ambientNoiseMonitor.isBelowThreshold ? .checkmark : .none
-        sensorConnectionCell.accessoryType = sensorMonitor.isPluggedIn ? .checkmark : .none
+        updateAccessoryType(to: reachabilityMonitor.isConnectedToInternet ? .checkmark : .none,
+                            for: TableRow.internetConnection)
+
+        updateAccessoryType(to: ambientNoiseMonitor.isBelowThreshold ? .checkmark : .none,
+                            for: TableRow.ambientNoise)
+
+        updateAccessoryType(to: sensorMonitor.isPluggedIn ? .checkmark : .none,
+                            for: TableRow.sensorConnection)
 
         reloadStartTestEnabledState()
+    }
+
+    func updateAccessoryType(to type: UITableViewCellAccessoryType, for row: TableRow) {
+        tableView.cellForRow(at: IndexPath(row: row.rawValue, section: 0))?.accessoryType = type
+    }
+
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return 3
+    }
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ReuseIdentifier", for: indexPath)
+
+        guard let row = TableRow(rawValue: indexPath.row) else { return cell }
+
+        cell.textLabel?.text = row.title
+        cell.selectionStyle = .none
+
+        switch row {
+        case .internetConnection: cell.accessoryType = reachabilityMonitor.isConnectedToInternet ? .checkmark : .none
+        case .ambientNoise: cell.accessoryType = ambientNoiseMonitor.isBelowThreshold ? .checkmark : .none
+        case .sensorConnection: cell.accessoryType = sensorMonitor.isPluggedIn ? .checkmark : .none
+        }
+
+        return cell
     }
 }
 
 extension PretestChecklistController: SensorMonitorDelegate {
 
     func sensorStateDidChange(_ monitor: SensorMonitor) {
-        sensorConnectionCell.accessoryType = sensorMonitor.isPluggedIn ? .checkmark : .none
+        updateAccessoryType(to: sensorMonitor.isPluggedIn ? .checkmark : .none,
+                            for: TableRow.sensorConnection)
         reloadStartTestEnabledState()
     }
 }
@@ -115,7 +166,8 @@ extension PretestChecklistController: SensorMonitorDelegate {
 extension PretestChecklistController: AmbientNoiseMonitorDelegate {
 
     func ambientNoiseMonitorDidChangeState(_ monitor: AmbientNoiseMonitor) {
-        quietEnvironmentCell.accessoryType = ambientNoiseMonitor.isBelowThreshold ? .checkmark : .none
+        updateAccessoryType(to: ambientNoiseMonitor.isBelowThreshold ? .checkmark : .none,
+                            for: TableRow.ambientNoise)
         reloadStartTestEnabledState()
     }
 }
@@ -123,7 +175,9 @@ extension PretestChecklistController: AmbientNoiseMonitorDelegate {
 extension PretestChecklistController: ReachabilityMonitorDelegate {
 
     func reachabilityMonitorDidChangeReachability(_ monitor: ReachabilityMonitor) {
-        internetConnectionCell.accessoryType = reachabilityMonitor.isConnectedToInternet ? .checkmark : .none
+        updateAccessoryType(to: reachabilityMonitor.isConnectedToInternet ? .checkmark : .none,
+                            for: TableRow.internetConnection)
         reloadStartTestEnabledState()
     }
 }
+
