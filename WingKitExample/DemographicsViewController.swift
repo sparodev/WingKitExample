@@ -10,18 +10,9 @@ import UIKit
 import WingKit
 
 protocol PickerDataSource: UIPickerViewDataSource, UIPickerViewDelegate {
+    var isExpanded: Bool { get set }
+
     func populateInitialSelectedValues(in pickerView: UIPickerView)
-}
-
-class FormCell: UITableViewCell {
-
-    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
-        super.init(style: .value1, reuseIdentifier: reuseIdentifier)
-    }
-
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
 }
 
 class PickerCell: UITableViewCell {
@@ -30,29 +21,80 @@ class PickerCell: UITableViewCell {
         didSet {
             pickerView.delegate = model
             pickerView.dataSource = model
+            pickerView.isHidden = !(model?.isExpanded ?? false)
+
+            pickerViewBottomConstraint?.isActive = model?.isExpanded ?? false
 
             model?.populateInitialSelectedValues(in: pickerView)
+
+            setNeedsUpdateConstraints()
         }
     }
 
+    let titleLabel = UILabel(frame: .zero)
+    let valueLabel = UILabel(frame: .zero)
     let pickerView = UIPickerView(frame: .zero)
+
+    fileprivate var pickerViewBottomConstraint: NSLayoutConstraint?
 
     override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
+        titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(titleLabel)
+
+        valueLabel.textColor = UIColor(red: 0.0/255.0, green: 177.0/255.0, blue: 211.0/255.0, alpha: 1.0)
+        valueLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        valueLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(valueLabel)
+
+        pickerView.isHidden = true
         pickerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(pickerView)
 
+        pickerViewBottomConstraint = pickerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
+        pickerViewBottomConstraint?.priority = .defaultLow
+        pickerViewBottomConstraint?.isActive = false
+
         NSLayoutConstraint.activate([
-            pickerView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            titleLabel.leftAnchor.constraint(equalTo: layoutMarginsGuide.leftAnchor),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            titleLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -10),
+
+            valueLabel.rightAnchor.constraint(equalTo: layoutMarginsGuide.rightAnchor),
+            valueLabel.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
+
+            pickerView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
             pickerView.rightAnchor.constraint(equalTo: contentView.rightAnchor),
-            pickerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             pickerView.leftAnchor.constraint(equalTo: contentView.leftAnchor),
             ])
+
+        setNeedsUpdateConstraints()
     }
 
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    func expand() {
+
+        model?.isExpanded = true
+
+        pickerViewBottomConstraint?.isActive = true
+        pickerView.isHidden = false
+
+        setNeedsUpdateConstraints()
+    }
+
+    func collapse() {
+
+        model?.isExpanded = false
+
+        pickerViewBottomConstraint?.isActive = false
+        pickerView.isHidden = true
+
+        setNeedsUpdateConstraints()
     }
 }
 
@@ -63,6 +105,8 @@ protocol GenericPickerCellModelDelegate: class {
 class GenericPickerCellModel: NSObject, PickerDataSource {
 
     weak var delegate: GenericPickerCellModelDelegate?
+
+    var isExpanded: Bool = false
 
     var title: String
     var options: [String]
@@ -124,6 +168,8 @@ class HeightPickerCellModel: NSObject, PickerDataSource {
     }
 
     weak var delegate: HeightPickerCellModelDelegate?
+
+    var isExpanded: Bool = false
 
     fileprivate var feet: Int {
         get {
@@ -287,11 +333,16 @@ class DemographicsViewController: UITableViewController {
 
         title = "Demographics"
 
+        if #available(iOS 11.0, *) {
+            navigationItem.largeTitleDisplayMode = .always
+        }
+
         navigationItem.leftBarButtonItem = cancelBarButton
         navigationItem.rightBarButtonItem = nextBarButton
 
-        tableView.register(FormCell.self, forCellReuseIdentifier: "FormCell")
         tableView.register(PickerCell.self, forCellReuseIdentifier: "PickerCell")
+
+        updateNextButtonState()
     }
 
     func updateNextButtonState() {
@@ -375,94 +426,90 @@ class DemographicsViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 1 + (activeIndexPath?.section == section ? 1 : 0)
+        return 1
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-
-        switch indexPath.row {
-        case 0: return formCell(in: tableView, at: indexPath)
-        case 1: return pickerCell(in: tableView, at: indexPath)
-        default: return UITableViewCell()
-        }
-    }
-
-    func formCell(in tableView: UITableView, at indexPath: IndexPath) -> UITableViewCell {
-        guard let section = TableSection(rawValue: indexPath.section),
-            let cell = tableView.dequeueReusableCell(withIdentifier: "FormCell", for: indexPath) as? FormCell else {
-                return UITableViewCell()
-        }
-
-        cell.textLabel?.text = section.title
-        cell.detailTextLabel?.text = {
-            switch section {
-            case .age:
-                if let age = age {
-                    return "\(age)"
-                } else {
-                    return "Tap to Select"
-                }
-            case .biologicalSex: return biologicalSex?.rawValue ?? "Tap to Select"
-            case .ethnicity: return ethnicity?.rawValue ?? "Tap to Select"
-            case .height:
-
-                if let height = height {
-                    return "\(height / 12)' \(height % 12)\""
-                } else {
-                    return "Tap to Select"
-                }
-            }
-        }()
-
-        return cell
-    }
-
-    func pickerCell(in tableView: UITableView, at indexPath: IndexPath) -> UITableViewCell {
 
         guard let section = TableSection(rawValue: indexPath.section),
             let cell = tableView.dequeueReusableCell(withIdentifier: "PickerCell", for: indexPath) as? PickerCell else {
                 return UITableViewCell()
         }
 
+        cell.titleLabel.text = section.title
+
         switch section {
-        case .age: cell.model = ageCellModel
-        case .biologicalSex: cell.model = biologicalSexCellModel
-        case .ethnicity: cell.model = ethnicityCellModel
-        case .height: cell.model = heightCellModel
+        case .age:
+
+            cell.valueLabel.text = {
+                if let age = age {
+                    return "\(age)"
+                } else {
+                    return "Tap to Select"
+                }
+            }()
+            cell.model = ageCellModel
+
+        case .biologicalSex:
+
+            cell.valueLabel.text = biologicalSex?.rawValue ?? "Tap to Select"
+            cell.model = biologicalSexCellModel
+
+
+        case .ethnicity:
+
+            cell.valueLabel.text = ethnicity?.rawValue ?? "Tap to Select"
+            cell.model = ethnicityCellModel
+
+        case .height:
+
+            cell.valueLabel.text = {
+                if let height = height {
+                    return "\(height / 12)' \(height % 12)\""
+                } else {
+                    return "Tap to Select"
+                }
+            }()
+            cell.model = heightCellModel
+
         }
 
         return cell
     }
 
-    override func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
-        return indexPath.row == 0 ? indexPath : nil
-    }
-
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 
+        guard let selectedCell = tableView.cellForRow(at: indexPath) as? PickerCell else {
+            return
+        }
+
+        tableView.beginUpdates()
         if let previousActiveIndexPath = activeIndexPath {
 
             if previousActiveIndexPath == indexPath {
                 activeIndexPath = nil
-                tableView.deleteRows(at: [IndexPath(row: 1, section: previousActiveIndexPath.section)], with: .top)
+
+                selectedCell.collapse()
+
+
             } else {
+
+                if let previousActiveCell = tableView.cellForRow(at: previousActiveIndexPath) as? PickerCell {
+                    previousActiveCell.collapse()
+                }
 
                 activeIndexPath = indexPath
 
-                let deletionAnimation: UITableViewRowAnimation = previousActiveIndexPath.section > indexPath.section ? .bottom : .top
-//                let insertionAnimation: UITableViewRowAnimation = previousActiveIndexPath.section > indexPath.section ? .
-
-                tableView.beginUpdates()
-                tableView.deleteRows(at: [IndexPath(row: 1, section: previousActiveIndexPath.section)], with: deletionAnimation)
-                tableView.insertRows(at: [IndexPath(row: 1, section: indexPath.section)], with: .top)
-                tableView.endUpdates()
+                selectedCell.expand()
             }
 
         } else {
 
             activeIndexPath = indexPath
-            tableView.insertRows(at: [IndexPath(row: 1, section: indexPath.section)], with: .top)
+            selectedCell.expand()
         }
+
+        tableView.endUpdates()
 
         tableView.deselectRow(at: indexPath, animated: true)
     }
