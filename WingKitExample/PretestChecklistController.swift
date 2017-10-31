@@ -29,15 +29,23 @@ class PretestChecklistController: UITableViewController {
     var sensorMonitor = SensorMonitor()
     var ambientNoiseMonitor = AmbientNoiseMonitor()
 
-    lazy var cancelBarButton: UIBarButtonItem = {
-        return UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelButtonTapped))
-    }()
-
     lazy var startTestBarButton: UIBarButtonItem = {
         return UIBarButtonItem(title: "Start Test", style: .plain,
                                target: self, action: #selector(startTestButtonTapped(_:)))
     }()
 
+    var patientData: PatientData!
+
+    init(patientData: PatientData) {
+        super.init(nibName: nil, bundle: nil)
+
+        self.patientData = patientData
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -48,7 +56,6 @@ class PretestChecklistController: UITableViewController {
         }
 
         navigationItem.rightBarButtonItem = startTestBarButton
-        navigationItem.leftBarButtonItem = cancelBarButton
 
         tableView.separatorStyle = .none
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "ReuseIdentifier")
@@ -98,15 +105,11 @@ class PretestChecklistController: UITableViewController {
         ambientNoiseMonitor.stop()
     }
 
-    @objc func cancelButtonTapped() {
-        dismiss(animated: true, completion: nil)
-    }
-
     @objc func startTestButtonTapped(_ sender: UIBarButtonItem) {
 
         sender.isEnabled = false
 
-        Client.createTestSession { testSession, error in
+        Client.createTestSession(with: patientData) { testSession, error in
 
             func handleError(_ error: Error? = nil) {
 

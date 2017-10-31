@@ -37,7 +37,7 @@ class MainViewController: UIViewController {
 
     @objc func startTestButtonTapped() {
 
-        let controller = UINavigationController(rootViewController: PretestChecklistController())
+        let controller = UINavigationController(rootViewController: DemographicsViewController())
 
         if #available(iOS 11.0, *) {
             controller.navigationBar.prefersLargeTitles = true
