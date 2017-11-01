@@ -31,10 +31,31 @@ struct TableSection {
     }
 }
 
+class ResultsCell: UITableViewCell {
+
+    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+        super.init(style: .value1, reuseIdentifier: reuseIdentifier)
+
+        selectionStyle = .none
+
+        textLabel?.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        detailTextLabel?.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 class TestResultsViewController: UITableViewController {
 
     var testSession: TestSession!
     var sections: [TableSection]!
+
+    lazy var doneBarButtonItem: UIBarButtonItem = {
+        return UIBarButtonItem(title: "Done", style: .plain,
+                               target: self, action: #selector(doneButtonTapped(_:)))
+    }()
 
     init(testSession: TestSession) {
         super.init(style: .plain)
@@ -52,8 +73,13 @@ class TestResultsViewController: UITableViewController {
         super.viewDidLoad()
 
         title = "Test Results"
+        navigationItem.rightBarButtonItem = doneBarButtonItem
 
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "TableCell")
+        tableView.register(ResultsCell.self, forCellReuseIdentifier: "TableCell")
+    }
+
+    @objc func doneButtonTapped(_ button: UIBarButtonItem) {
+        dismiss(animated: true, completion: nil)
     }
 
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -99,6 +125,14 @@ fileprivate extension TestSession {
             TableRow(title: "Respiratory State", value: respiratoryState?.rawValue ?? emptyValue),
             ])
 
+        if let pefPredicted = pefPredicted {
+            topLevelSection.addRow(TableRow(title: "PEF Predicted", value: "\(pefPredicted)"))
+        }
+
+        if let fev1Predicted = fev1Predicted {
+            topLevelSection.addRow(TableRow(title: "FEV1 Predicted", value: "\(fev1Predicted)"))
+        }
+
         sections.append(topLevelSection)
 
         if let bestTest = bestTest {
@@ -116,15 +150,28 @@ fileprivate extension TestSession {
         let emptyValue = "--"
 
         var section = TableSection(title: title)
+
         section.addRows([
             TableRow(title: "ID", value: test.id),
             TableRow(title: "Status", value: test.status.rawValue),
-            TableRow(title: "Taken At", value: test.takenAt?.iso8601 ?? emptyValue),
-            TableRow(title: "Breath Duration", value: "\(test.breathDuration)"),
-            TableRow(title: "Total Volume", value: "\(test.totalVolume)"),
-            TableRow(title: "PEF", value: "\(test.pef)"),
-            TableRow(title: "FEV1", value: "\(test.fev1)")
+            TableRow(title: "Taken At", value: test.takenAt?.iso8601 ?? emptyValue)
             ])
+
+        if let breathDuration = test.breathDuration {
+            section.addRow(TableRow(title: "Breath Duration", value: "\(String(describing: breathDuration))"))
+        }
+
+        if let totalVolume = test.totalVolume {
+            section.addRow(TableRow(title: "Total Volume", value: "\(String(describing: totalVolume))"))
+        }
+
+        if let pef = test.pef {
+            section.addRow(TableRow(title: "PEF", value: "\(String(describing: pef))"))
+        }
+
+        if let fev1 = test.fev1 {
+            section.addRow(TableRow(title: "FEV1", value: "\(String(describing: fev1))"))
+        }
 
         return section
     }
