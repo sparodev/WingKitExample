@@ -243,6 +243,10 @@ class TestScreenViewController: UIViewController {
                 
                 var alertMessage = ""
                 var alertActions = [UIAlertAction]()
+
+                let viewResultsAction = UIAlertAction(title: "View Results", style: .default, handler: { (_) in
+                    self.transitionToResultsScreen()
+                })
                 
                 let nextTestAction = UIAlertAction(title: "Next Test", style: .default, handler: { (_) in
                     self.transitionToNextTest()
@@ -281,7 +285,7 @@ class TestScreenViewController: UIViewController {
                 case .reproducibleTestFinal:
                     
                     alertMessage = "You've completed the test session with reproducible results!"
-                    alertActions = [dismissAction]
+                    alertActions = [viewResultsAction]
 
                 default: return
                 }
@@ -310,6 +314,10 @@ class TestScreenViewController: UIViewController {
 
     func transitionToNextTest() {
         self.show(TestScreenViewController(sessionManager: sessionManager), sender: nil)
+    }
+
+    func transitionToResultsScreen() {
+        self.show(TestResultsViewController(testSession: sessionManager.testSession), sender: nil)
     }
 
     func presentTestInteruptionAlert(for reason: LocalTestFailureReason, actions: [UIAlertAction]) {
