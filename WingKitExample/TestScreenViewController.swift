@@ -334,7 +334,7 @@ extension TestScreenViewController: SensorMonitorDelegate {
         switch recorder.state {
         case .ready:
 
-            startBarButton.isEnabled = monitor.isPluggedIn && reachabilityMonitor.isConnectedToInternet
+            updateStartButtonEnabledState()
 
             if monitor.isPluggedIn {
 
