@@ -347,19 +347,13 @@ extension TestScreenViewController: SensorMonitorDelegate {
 
             } else {
 
-                let alert = UIAlertController(
-                    title: "Sensor Disconnected",
-                    message: "It appears the sensor disconnected. Plug it back in to resume the test or tap cancel to end the test.", preferredStyle: .alert)
-
-                alert.addAction(UIAlertAction(
-                    title: "Cancel Test",
-                    style: .destructive,
-                    handler: { _ in
-
-                        self.dismiss(animated: true, completion: nil)
-                }))
-
-                present(alert, animated: true, completion: nil)
+                self.presentTestInteruptionAlert(
+                    for: .sensorDisconnected,
+                    actions: [
+                        UIAlertAction(title: "Cancel Test", style: .destructive, handler: { (_) in
+                            self.dismiss(animated: true, completion: nil)
+                        })
+                    ])
             }
 
         case .recording:
