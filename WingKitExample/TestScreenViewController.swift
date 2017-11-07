@@ -217,7 +217,7 @@ class TestScreenViewController: UIViewController {
 
             self.testScreenView.showActivityIndicator(with: "PROCESSING")
 
-            self.sessionManager.refreshTestSession(completion: { (error) in
+            self.sessionManager.processTestSession(completion: { (error) in
 
                 self.testScreenView.hideActivityIndicator()
 

@@ -40,6 +40,8 @@ class PickerCell: UITableViewCell {
     override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
+        contentView.clipsToBounds = true
+
         titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(titleLabel)
@@ -59,8 +61,8 @@ class PickerCell: UITableViewCell {
 
         NSLayoutConstraint.activate([
             titleLabel.leftAnchor.constraint(equalTo: layoutMarginsGuide.leftAnchor),
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
-            titleLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -10),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            titleLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -12),
 
             valueLabel.rightAnchor.constraint(equalTo: layoutMarginsGuide.rightAnchor),
             valueLabel.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
@@ -340,6 +342,8 @@ class DemographicsViewController: UITableViewController {
         navigationItem.leftBarButtonItem = cancelBarButton
         navigationItem.rightBarButtonItem = nextBarButton
 
+        tableView.separatorStyle = .none
+        tableView.alwaysBounceVertical = false
         tableView.register(PickerCell.self, forCellReuseIdentifier: "PickerCell")
 
         updateNextButtonState()
