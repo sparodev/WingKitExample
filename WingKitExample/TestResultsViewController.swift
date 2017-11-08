@@ -9,9 +9,18 @@
 import UIKit
 import WingKit
 
-struct TableRow {
+protocol TableRow {
+    var title: String { get set }
+}
+
+struct KeyValueRow: TableRow {
     var title: String
-    var value: String
+    var value: String?
+}
+
+struct ExhaleCurveRow: TableRow {
+    var title: String
+    var exhaleCurve: [[Double]]
 }
 
 struct TableSection {
@@ -29,6 +38,172 @@ struct TableSection {
     mutating func addRows(_ rows: [TableRow]) {
         for row in rows { addRow(row) }
     }
+}
+
+class ExhaleCurveGraphView: UIView {
+    var curveWidth: CGFloat = 0
+    var curveHeight: CGFloat = 0
+    var rawExhaleCurve: [[Double]]?
+    var dataPoints: [CGPoint] = []
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+
+        self.backgroundColor = .clear
+    }
+
+    required init(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func update(withExhaleCurve exhaleCurve: [[Double]]) {
+        rawExhaleCurve = exhaleCurve
+        setNeedsDisplay()
+    }
+
+    func calculateDataPoints(fromExhaleCurve exhaleCurve: [[Double]], inRect rect: CGRect) -> [CGPoint] {
+        let xScale = rect.size.width
+        let yScale = -1 * rect.size.height
+
+        return exhaleCurve.map { (volumeFlowTuple: [Double]) in
+            let x = CGFloat(volumeFlowTuple[0])
+            let y = CGFloat(volumeFlowTuple[1])
+            return CGPoint(x: x * xScale,
+                           y: frame.size.height + y * yScale)
+        }
+    }
+
+    override func draw(_ rect: CGRect) {
+        curveWidth = rect.size.width * 0.763
+        curveHeight = rect.size.height * 0.192
+
+        guard let exhaleCurve = rawExhaleCurve else {
+            return
+        }
+
+        dataPoints = calculateDataPoints(fromExhaleCurve: exhaleCurve, inRect: rect)
+
+        let context: CGContext = UIGraphicsGetCurrentContext()!
+        context.setLineWidth(1.0)
+        context.setStrokeColor(UIColor(red: 0.0/255.0, green: 177.0/255.0, blue: 211.0/255.0, alpha: 1.0).cgColor)
+        var i = 0
+        while i < dataPoints.count - 3 {
+
+            context.move(to: dataPoints[i])
+
+            context.addCurve(
+                to: dataPoints[i + 3],
+                control1: dataPoints[i + 1],
+                control2: dataPoints[i + 2]
+            )
+
+            context.strokePath()
+
+            i += 3
+        }
+        switch dataPoints.count - i {
+        case 2:
+
+            context.move(to: dataPoints[i])
+
+            context.addLine(to: dataPoints[i + 1])
+
+            context.strokePath()
+
+        case 3:
+
+            context.move(to: dataPoints[i])
+
+            context.addQuadCurve(
+                to: dataPoints[i + 2],
+                control: dataPoints[i + 1]
+            )
+
+            context.strokePath()
+        default:
+            break
+        }
+    }
+}
+
+class ExhaleCurveCell: UITableViewCell {
+
+    let edgeInsets = UIEdgeInsets(top: 14, left: 16, bottom: 14, right: 16)
+
+    let interitemPadding: CGFloat = 20
+    let titleLabel = UILabel(frame: .zero)
+    let exhaleCurveView = ExhaleCurveGraphView(frame: .zero)
+
+    var rowModel: ExhaleCurveRow? {
+        didSet {
+            titleLabel.text = rowModel?.title
+            exhaleCurveView.update(withExhaleCurve: rowModel?.exhaleCurve ?? [])
+            setNeedsUpdateConstraints()
+        }
+    }
+
+    fileprivate var didSetupConstraints = false
+
+    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+
+        backgroundColor = .clear
+        selectionStyle = .none
+
+        configureTitleLabel()
+        configureExhaleCurveView()
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    fileprivate func configureTitleLabel() {
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        titleLabel.textAlignment = .left
+        titleLabel.text = "Exhale Curve"
+        contentView.addSubview(titleLabel)
+    }
+
+    fileprivate func configureExhaleCurveView() {
+        exhaleCurveView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(exhaleCurveView)
+    }
+
+    override func updateConstraints() {
+        if !didSetupConstraints {
+
+            constrainViews()
+            didSetupConstraints = true
+        }
+
+        super.updateConstraints()
+    }
+
+    fileprivate func constrainViews() {
+        constrainTitleLabel()
+        constrainExhaleCurveView()
+    }
+
+    fileprivate func constrainTitleLabel() {
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: edgeInsets.top),
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: edgeInsets.left),
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -edgeInsets.right)
+            ])
+    }
+
+    fileprivate func constrainExhaleCurveView() {
+        NSLayoutConstraint.activate([
+            exhaleCurveView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 22),
+            exhaleCurveView.leftAnchor.constraint(equalTo: titleLabel.leftAnchor),
+            exhaleCurveView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -edgeInsets.right),
+            exhaleCurveView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -edgeInsets.bottom),
+            exhaleCurveView.heightAnchor.constraint(equalToConstant: 120)
+            ])
+    }
+
 }
 
 class ResultsCell: UITableViewCell {
@@ -76,6 +251,7 @@ class TestResultsViewController: UITableViewController {
         navigationItem.rightBarButtonItem = doneBarButtonItem
 
         tableView.register(ResultsCell.self, forCellReuseIdentifier: "TableCell")
+        tableView.register(ExhaleCurveCell.self, forCellReuseIdentifier: "ExhaleCurveCell")
     }
 
     @objc func doneButtonTapped(_ button: UIBarButtonItem) {
@@ -92,14 +268,29 @@ class TestResultsViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-        let cell = tableView.dequeueReusableCell(withIdentifier: "TableCell", for: indexPath)
+        let rowModel = sections[indexPath.section].rows[indexPath.row]
 
-        let row = sections[indexPath.section].rows[indexPath.row]
+        if let keyValueRow = rowModel as? KeyValueRow {
 
-        cell.textLabel?.text = row.title
-        cell.detailTextLabel?.text = row.value
+            let cell = tableView.dequeueReusableCell(withIdentifier: "TableCell", for: indexPath)
 
-        return cell
+            cell.textLabel?.text = keyValueRow.title
+            cell.detailTextLabel?.text = keyValueRow.value
+
+            return cell
+
+
+        } else if let exhaleCurveRow = rowModel as? ExhaleCurveRow {
+
+            let cell = tableView.dequeueReusableCell(withIdentifier: "ExhaleCurveCell", for: indexPath) as! ExhaleCurveCell
+
+            cell.rowModel = exhaleCurveRow
+
+            return cell
+
+        } else {
+            return UITableViewCell()
+        }
     }
 
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -117,20 +308,24 @@ fileprivate extension TestSession {
 
         var topLevelSection = TableSection()
         topLevelSection.addRows([
-            TableRow(title: "ID", value: id),
-            TableRow(title: "Started At", value: startedAt.iso8601),
-            TableRow(title: "Ended At", value: endedAt?.iso8601 ?? emptyValue),
-            TableRow(title: "Best Test Choice", value: bestTestChoice?.rawValue ?? emptyValue),
-            TableRow(title: "Lung Function Zone", value: lungFunctionZone?.rawValue ?? emptyValue),
-            TableRow(title: "Respiratory State", value: respiratoryState?.rawValue ?? emptyValue),
+            KeyValueRow(title: "ID", value: id),
+            KeyValueRow(title: "Started At", value: startedAt.iso8601),
+            KeyValueRow(title: "Ended At", value: endedAt?.iso8601 ?? emptyValue),
+            KeyValueRow(title: "Best Test Choice", value: bestTestChoice?.rawValue ?? emptyValue),
+            KeyValueRow(title: "Lung Function Zone", value: lungFunctionZone?.rawValue ?? emptyValue),
+            KeyValueRow(title: "Respiratory State", value: respiratoryState?.rawValue ?? emptyValue),
             ])
 
         if let pefPredicted = pefPredicted {
-            topLevelSection.addRow(TableRow(title: "PEF Predicted", value: "\(pefPredicted)"))
+            topLevelSection.addRow(KeyValueRow(title: "PEF Predicted",
+                                            value: ReferenceMetric.pef.formattedString(forValue: pefPredicted,
+                                                                                       includeUnit: true)))
         }
 
         if let fev1Predicted = fev1Predicted {
-            topLevelSection.addRow(TableRow(title: "FEV1 Predicted", value: "\(fev1Predicted)"))
+            topLevelSection.addRow(KeyValueRow(title: "FEV1 Predicted",
+                                            value: ReferenceMetric.fev1.formattedString(forValue: fev1Predicted,
+                                                                                        includeUnit: true)))
         }
 
         sections.append(topLevelSection)
@@ -152,25 +347,31 @@ fileprivate extension TestSession {
         var section = TableSection(title: title)
 
         section.addRows([
-            TableRow(title: "ID", value: test.id),
-            TableRow(title: "Status", value: test.status.rawValue),
-            TableRow(title: "Taken At", value: test.takenAt?.iso8601 ?? emptyValue)
+            KeyValueRow(title: "ID", value: test.id),
+            KeyValueRow(title: "Status", value: test.status.rawValue),
+            KeyValueRow(title: "Taken At", value: test.takenAt?.iso8601 ?? emptyValue)
             ])
 
         if let breathDuration = test.breathDuration {
-            section.addRow(TableRow(title: "Breath Duration", value: "\(String(describing: breathDuration))"))
+            section.addRow(KeyValueRow(title: "Breath Duration", value: "\(Double(round(100 * breathDuration) / 100)) s"))
         }
 
         if let totalVolume = test.totalVolume {
-            section.addRow(TableRow(title: "Total Volume", value: "\(String(describing: totalVolume))"))
+            section.addRow(KeyValueRow(title: "Total Volume", value: "\(Double(round(100 * totalVolume) / 100)) L"))
         }
 
         if let pef = test.pef {
-            section.addRow(TableRow(title: "PEF", value: "\(String(describing: pef))"))
+            section.addRow(KeyValueRow(title: "PEF", value: ReferenceMetric.pef.formattedString(forValue: pef,
+                                                                                             includeUnit: true)))
         }
 
         if let fev1 = test.fev1 {
-            section.addRow(TableRow(title: "FEV1", value: "\(String(describing: fev1))"))
+            section.addRow(KeyValueRow(title: "FEV1", value: ReferenceMetric.fev1.formattedString(forValue: fev1,
+                                                                                               includeUnit: true)))
+        }
+
+        if let exhaleCurve = test.exhaleCurve {
+            section.addRow(ExhaleCurveRow(title: "Exhale Curve", exhaleCurve: exhaleCurve))
         }
 
         return section
