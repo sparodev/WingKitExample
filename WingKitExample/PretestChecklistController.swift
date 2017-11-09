@@ -25,6 +25,9 @@ class PretestChecklistController: UITableViewController {
         }
     }
 
+    var client: Client
+    var patientData: PatientData
+
     var reachabilityMonitor = ReachabilityMonitor()
     var sensorMonitor = SensorMonitor()
     var ambientNoiseMonitor = AmbientNoiseMonitor()
@@ -34,12 +37,11 @@ class PretestChecklistController: UITableViewController {
                                target: self, action: #selector(startTestButtonTapped(_:)))
     }()
 
-    var patientData: PatientData!
-
-    init(patientData: PatientData) {
-        super.init(nibName: nil, bundle: nil)
-
+    init(client: Client, patientData: PatientData) {
+        self.client = client
         self.patientData = patientData
+
+        super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -109,7 +111,7 @@ class PretestChecklistController: UITableViewController {
 
         sender.isEnabled = false
 
-        Client.createTestSession(with: patientData) { testSession, error in
+        client.createTestSession(with: patientData) { testSession, error in
 
             func handleError(_ error: Error? = nil) {
 
@@ -139,8 +141,10 @@ class PretestChecklistController: UITableViewController {
                 return
             }
 
-            self.show(TestScreenViewController(sessionManager: TestSessionManager(testSession: testSession)),
-                      sender: nil)
+            self.show(
+                TestScreenViewController(sessionManager: TestSessionManager(client: self.client, testSession: testSession)),
+                sender: nil
+            )
             sender.isEnabled = true
         }
     }

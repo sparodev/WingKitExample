@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import WingKit
 
 class MainViewController: UIViewController {
 
@@ -37,7 +38,10 @@ class MainViewController: UIViewController {
 
     @objc func startTestButtonTapped() {
 
-        let controller = UINavigationController(rootViewController: DemographicsViewController())
+        let client = Client()
+        client.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IktyNDJ5b2pHdzM4V3oiLCJ0eXBlIjoiYXV0aCIsImtleUdlbiI6IjEyRUJBYmxnTHJOSlAiLCJpYXQiOjE1MDk0NzU1ODcsImV4cCI6MTU0MTAxMTU4N30.PG6wEYDBwuZeWaUhIQGRPtH1UwiFqBXHs-zOqkuP3CI"
+
+        let controller = UINavigationController(rootViewController: DemographicsViewController(client: client))
 
         if #available(iOS 11.0, *) {
             controller.navigationBar.prefersLargeTitles = true
