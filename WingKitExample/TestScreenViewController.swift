@@ -60,8 +60,6 @@ class TestScreenViewController: UIViewController {
     var sensorMonitor = SensorMonitor()
     var reachabilityMonitor = ReachabilityMonitor()
 
-    var baselineBlowBackground = 0.5
-
     var activeAlert: UIAlertController? {
         didSet {
             if activeAlert == nil {
@@ -133,13 +131,16 @@ class TestScreenViewController: UIViewController {
         sensorMonitor.start()
 
         if !sensorMonitor.isPluggedIn {
-            let alert = UIAlertController(title: "Where's the sensor?", message: "Be sure Wing is plugged in and be careful not to pull on the cord when blowing into Wing!", preferredStyle: .alert)
 
-            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { (_) in
-                alert.dismiss(animated: true, completion: {
-                    self.dismiss(animated: true, completion: nil)
-                })
-            }))
+            presentTestInteruptionAlert(for: .sensorDisconnected,
+                                        actions: [
+                                            UIAlertAction(title: "Cancel Test", style: .destructive, handler: { (_) in
+                                                self.dismiss(animated: true, completion: {
+                                                    self.dismiss(animated: true, completion: nil)
+                                                })
+                                            }),
+                                            UIAlertAction(title: "Retry", style: .destructive, handler: { (_) in })
+                ])
         }
 
         do {
@@ -280,7 +281,7 @@ class TestScreenViewController: UIViewController {
                 case .notReproducibleTestFinal:
                     
                     alertMessage = "The results from your tests aren't reproducible. Please begin a new test session to try again."
-                    alertActions = [dismissAction]
+                    alertActions = [viewResultsAction]
                     
                 case .reproducibleTestFinal:
                     
@@ -368,6 +369,8 @@ extension TestScreenViewController: SensorMonitorDelegate {
 
             guard !monitor.isPluggedIn else { return }
 
+            recorder.stopRecording()
+
             let alert = UIAlertController(
                 title: "Sensor Disconnected",
                 message: "It appears the sensor disconnected while recording. Plug it back in and let's try that again.", preferredStyle: .alert)
@@ -418,6 +421,9 @@ extension TestScreenViewController: ReachabilityMonitorDelegate {
         case .recording:
 
             if !monitor.isConnectedToInternet {
+
+                recorder.stopRecording()
+
                 self.presentTestInteruptionAlert(for: .internetDisconnected, actions: [
                     UIAlertAction(title: "Next Test", style: .default, handler: { (_) in
                         self.transitionToNextTest()
