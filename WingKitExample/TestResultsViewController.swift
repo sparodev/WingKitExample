@@ -248,6 +248,7 @@ class TestResultsViewController: UITableViewController {
         super.viewDidLoad()
 
         title = "Test Results"
+        navigationItem.hidesBackButton = true
         navigationItem.rightBarButtonItem = doneBarButtonItem
 
         tableView.register(ResultsCell.self, forCellReuseIdentifier: "TableCell")
