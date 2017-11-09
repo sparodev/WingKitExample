@@ -315,6 +315,7 @@ fileprivate extension TestSession {
             KeyValueRow(title: "Best Test Choice", value: bestTestChoice?.rawValue ?? emptyValue),
             KeyValueRow(title: "Lung Function Zone", value: lungFunctionZone?.rawValue ?? emptyValue),
             KeyValueRow(title: "Respiratory State", value: respiratoryState?.rawValue ?? emptyValue),
+            KeyValueRow(title: "Reference Metric", value: referenceMetric.rawValue)
             ])
 
         if let pefPredicted = pefPredicted {
