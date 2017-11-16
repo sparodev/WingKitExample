@@ -1,13 +1,13 @@
 PODS:
-  - AWSCognito (2.6.2):
-    - AWSCore (= 2.6.2)
-  - AWSCognitoIdentityProvider (2.6.2):
-    - AWSCore (= 2.6.2)
-  - AWSCore (2.6.2)
-  - AWSS3 (2.6.2):
-    - AWSCore (= 2.6.2)
+  - AWSCognito (2.6.5):
+    - AWSCore (= 2.6.5)
+  - AWSCognitoIdentityProvider (2.6.5):
+    - AWSCore (= 2.6.5)
+  - AWSCore (2.6.5)
+  - AWSS3 (2.6.5):
+    - AWSCore (= 2.6.5)
   - ReachabilitySwift (3)
-  - WingKit (0.0.1):
+  - WingKit (0.1.0-stubPatient):
     - AWSCognito (~> 2.6.1)
     - AWSCognitoIdentityProvider (~> 2.6.1)
     - AWSCore (~> 2.6.1)
@@ -15,20 +15,16 @@ PODS:
     - ReachabilitySwift (~> 3)
 
 DEPENDENCIES:
-  - WingKit (from `../WingKit`)
-
-EXTERNAL SOURCES:
-  WingKit:
-    :path: ../WingKit
+  - WingKit (= 0.1.0-stubPatient)
 
 SPEC CHECKSUMS:
-  AWSCognito: e8db76ef485fbbc1c90617217451301b1477ce45
-  AWSCognitoIdentityProvider: 8d2e86a00ca828ceaf6513b96ee3a45b70518631
-  AWSCore: 8f458961a4967be219162108f5be7df1c935639a
-  AWSS3: b3e2c4aca868cae06b5b88337ceabee25709fcc5
+  AWSCognito: 763ef7a193e6eaeddff382db4daa7608ec61be69
+  AWSCognitoIdentityProvider: 7d55b4511ece28c22debeb8f2ab8bc82ed5f6705
+  AWSCore: b4895b4a5256d0040f8825ad31f3477d081f508f
+  AWSS3: a92df2b4625488b5aae142f4311379fcd6bae3a7
   ReachabilitySwift: f5b9bb30a0777fac8f09ce8b067e32faeb29bb64
-  WingKit: 0f556ceadc334540d8a2453aa8811e5e28ab32e5
+  WingKit: fbaa4a17f4d27eb08c4377885589ebbe48257c07
 
-PODFILE CHECKSUM: c765ca49e9d39e8210e97291474c82a5684d7da2
+PODFILE CHECKSUM: e908b95588ed93ed66e51f350b2ae2293fc9bacc
 
 COCOAPODS: 1.2.1
