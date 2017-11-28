@@ -13,6 +13,10 @@ class MainViewController: UIViewController {
 
     let startTestButton = UIButton(frame: .zero)
 
+    // Configure the `clientId` and `clientSecret` properties with your application's assigned OAuth credentials.
+    var clientId: String?
+    var clientSecret: String?
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -38,19 +42,75 @@ class MainViewController: UIViewController {
 
     @objc func startTestButtonTapped() {
 
-        let client = Client()
-        client.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IktyNDJ5b2pHdzM4V3oiLCJ0eXBlIjoiYXV0aCIsImtleUdlbiI6IjEyRUJBYmxnTHJOSlAiLCJpYXQiOjE1MDk0NzU1ODcsImV4cCI6MTU0MTAxMTU4N30.PG6wEYDBwuZeWaUhIQGRPtH1UwiFqBXHs-zOqkuP3CI"
+        guard let clientId = clientId,
+            let clientSecret = clientSecret else {
 
-        let controller = UINavigationController(rootViewController: DemographicsViewController(client: client))
+                let alert = UIAlertController(
+                    title: "Invalid OAuth Credentials",
+                    message: "You need to configure the client id and client secret on the Client object in order"
+                        + " to authenticate.",
+                    preferredStyle: .alert
+                )
 
-        if #available(iOS 11.0, *) {
-            controller.navigationBar.prefersLargeTitles = true
+                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+
+                present(alert, animated: true, completion: nil)
+
+                return
         }
 
-        controller.navigationBar.setValue(true, forKey: "hidesShadow")
-        controller.navigationBar.barTintColor = .white
-        controller.modalPresentationStyle = .fullScreen
-        show(controller, sender: nil)
+        let client = Client()
+
+        client.oauth = OAuthCredentials(
+            id: clientId,
+            secret: clientSecret
+        )
+
+        client.authenticate { [weak self] (token, error) in
+
+            guard let token = token else {
+
+                if let error = error {
+
+                    let alert = UIAlertController(
+                        title: "Authentication Failed",
+                        message: "Error: \(error)",
+                        preferredStyle: .alert
+                    )
+
+                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+
+                    self?.present(alert, animated: true, completion: nil)
+
+                } else {
+
+                    let alert = UIAlertController(
+                        title: "Unknown Error",
+                        message: "An unknown error occurred while trying to authenticate.",
+                        preferredStyle: .alert
+                    )
+
+                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+
+                    self?.present(alert, animated: true, completion: nil)
+                }
+
+                return
+            }
+
+            client.token = token
+
+            let controller = UINavigationController(rootViewController: DemographicsViewController(client: client))
+
+            if #available(iOS 11.0, *) {
+                controller.navigationBar.prefersLargeTitles = true
+            }
+
+            controller.navigationBar.setValue(true, forKey: "hidesShadow")
+            controller.navigationBar.barTintColor = .white
+            controller.modalPresentationStyle = .fullScreen
+            self?.show(controller, sender: nil)
+        }
     }
 }
 
