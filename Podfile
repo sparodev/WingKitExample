@@ -7,6 +7,6 @@ target 'WingKitExample' do
   use_frameworks!
 
   # Pods for WingKitExample
-  pod 'WingKit', '0.1.0-stubPatient'
+  pod 'WingKit', '0.1.1'
 
 end
