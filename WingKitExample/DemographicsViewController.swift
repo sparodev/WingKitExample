@@ -422,7 +422,7 @@ class DemographicsViewController: UITableViewController {
         }
 
         let patientData = PatientData(
-            id: "5yEwdO6MVR8ZA",
+            id: String(UUID().uuidString.prefix(20)),
             biologicalSex: biologicalSex,
             ethnicity: ethnicity,
             height: height,
